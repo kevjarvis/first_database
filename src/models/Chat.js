@@ -1,10 +1,10 @@
-import { MYSQLDatabase } from "../utils/MySQLConnect.js";
+import { SQLiteConnect } from "../utils/SQLiteConnect.js";
 import { getDate } from "../utils/getActualDate.js";
 
-class ProductHandler {
-  _tablename = "products";
+class ChatHandler {
+  _tablename = "chat";
   constructor() {
-    this.db = new MYSQLDatabase();
+    this.db = new SQLiteConnect();
     // verificar si existe una tabla y la crea en caso de que no
     this.db.connection.schema
       .hasTable(this._tablename)
@@ -18,8 +18,8 @@ class ProductHandler {
               console.log(`${getDate()} [INFO] Creando tabla...`);
               table.increments("id");
               table.string("nombre");
-              table.integer("precio");
-              table.string("thumbnail");
+              table.integer("mensaje");
+              table.string("timestamp");
             })
             .then(() =>
               console.log(
@@ -32,19 +32,18 @@ class ProductHandler {
         console.log(
           `${getDate()} [SUCCESS] Base de datos conectada exitosamente`
         );
-        return this.db.connection.destroy();
       });
   }
 
-  async addProduct(product_object) {
+  async addMessage(message_object) {
     try {
-      return this.db.connection(this._tablename).insert(product_object);
+      return this.db.connection(this._tablename).insert(message_object);
     } catch (e) {
       console.log(e);
     }
   }
 
-  async getById(id) {
+  async getMessageById(id) {
     try {
       return await this.db.connection(this._tablename).where({ id }).first();
     } catch (e) {
@@ -52,7 +51,7 @@ class ProductHandler {
     }
   }
 
-  async getAll() {
+  async getAllMessages() {
     try {
       return await this.db.connection(this._tablename).select();
     } catch (e) {
@@ -60,7 +59,7 @@ class ProductHandler {
     }
   }
 
-  async deleteById(id) {
+  async deleteMessage(id) {
     try {
       await this.db.connection(this._tablename).where({ id }).del();
     } catch (e) {
@@ -68,7 +67,7 @@ class ProductHandler {
     }
   }
 
-  async deleteAll() {
+  async deleteAllMessages() {
     try {
       await this.db.connection(this._tablename).select().del();
     } catch (e) {
@@ -77,4 +76,4 @@ class ProductHandler {
   }
 }
 
-export default ProductHandler;
+export default ChatHandler;

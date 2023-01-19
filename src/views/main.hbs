@@ -1,0 +1,29 @@
+<h1 class="text-2xl font-bold mb-10">Agregar Productos</h1>
+<form class="flex flex-row gap-4 items-center">
+  <label for="nombre">Nombre producto</label>
+  <input type="text" name="nombre" id="nombre">
+  <label for="precio">Precio</label>
+  <input type="number" name="precio" id="precio">
+  <label for="thumbnail">Url imágen</label>
+  <input type="text" name="thumbnail" id="thumbnail">
+
+  <button class="bg-blue-700 text-white font-bold p-4 rounded-lg" type="submit" id="addProduct">Agregar producto</button>
+</form>
+
+<section id="main_home" class="my-10 flex gap-10">
+  <div class="w-1/2">
+    <h2 class="text-xl font-bold">Productos</h2>
+    <ul id="products-list-render" class="px-6"></ul>
+  </div>
+
+  <div class="w-1/2">
+    <h2 class="text-xl font-bold mb-5">Chat</h2>
+    <div class="h-64 bg-gray-100" id="chat_main">
+      <form class="flex flex-col gap-4 w-1/2 mx-auto py-4">
+        <label class="font-bold" for="username">Nombre de usuario</label>
+        <input type="text" name="username" id="username">
+        <button class="bg-blue-700 text-white font-bold p-4 rounded-lg" type="submit" id="signinButton">Chatear</button>
+      </form>
+    </div>
+  </div>
+</section>

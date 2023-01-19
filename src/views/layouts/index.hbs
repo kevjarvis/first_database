@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Ecommerce</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/flowbite@latest/dist/flowbite.min.css"
+  />
+</head>
+<body class="container mx-auto">
+<header class="border border-1 border-black p-5 my-7">
+  <nav>
+    <ul>
+      <li><a class="text-blue-500 font-bold" href="/">Home</a></li>
+    </ul>
+  </nav>
+</header>
+  {{{body}}}
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.7/handlebars.min.js"></script>
+<script src="https://unpkg.com/flowbite@latest/dist/flowbite.js"></script>
+
+<script>
+  const uri = 'http://127.0.0.1:8080/api/productos'
+  const el_buttonAdd = document.getElementById('addProduct');
+  const socket = io();
+
+  el_buttonAdd.addEventListener('click', async function (e) {
+    e.preventDefault()
+
+    const nombre = document.getElementById('nombre').value
+    const precio = document.getElementById('precio').value
+    const thumbnail = document.getElementById('thumbnail').value
+
+    const product_data = {nombre, precio, thumbnail}
+
+    try {
+      const response = await fetch(uri, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(product_data)
+      })
+
+      const res = await response.json()
+      if (res.result === 'ok') {
+        alert('producto agregado con éxito')
+        socket.emit('client:product-added', product_data)
+      }
+
+      // resetea el formulario
+      this.parentNode.reset()
+
+    } catch (e) {
+      console.log(e)
+    }
+  })
+
+  socket.on('server:update-products', products => {
+    if (!products) return
+    JSON.parse(products).forEach(product => renderProducts(product))
+  })
+
+  socket.on('server:product-added', (product_data) => {
+    renderProducts(product_data)
+  })
+
+
+  async function renderProducts (data) {
+    await fetch("./templates/product_home.hbs")
+      .then(function(response) {
+        return response.text();
+      })
+      .then(function(template) {
+        // compila la plantilla
+        const compiledTemplate = Handlebars.compile(template);
+        // renderiza la plantilla con la información especificada
+        const html = compiledTemplate({
+          thumbnail: data.thumbnail,
+          name: data.nombre,
+          price: data.precio
+        });
+        // inserta el HTML resultante en el documento
+        const products_container = document.getElementById('products-list-render');
+        products_container.innerHTML = html + products_container.innerHTML;
+      });
+  }
+
+//  Chat
+
+  async function renderChat() {
+    await fetch("./templates/chat.hbs")
+      .then(function(response) {
+        return response.text();
+      })
+      .then(function(template) {
+        // compila la plantilla
+        const compiledTemplate = Handlebars.compile(template);
+        // renderiza la plantilla con la información especificada
+        const html = compiledTemplate();
+        // inserta el HTML resultante en el documento
+        const products_container = document.getElementById('chat_main');
+        products_container.innerHTML = html + products_container.innerHTML;
+      });
+  }
+
+  const signInButton = document.getElementById('signinButton');
+  signInButton.addEventListener('click', function (e) {
+    e.preventDefault()
+    const username = document.getElementById('username').value
+    sessionStorage.setItem('username', username)
+
+    this.parentElement.style.display = 'none'
+    // renderiza el chat
+    renderChat().then(() => {
+      socket.emit('client:refresh-messages')
+      socket.on('server:refresh-messages', messages => {
+        for (const message of messages) {
+          renderMessage(message).then( () => {
+            const chatDiv = document.getElementById('chat_body');
+            chatDiv.scrollTop = chatDiv.scrollHeight
+          });
+        }
+      })
+    })
+
+
+
+  })
+
+  async function renderMessage(data) {
+    await fetch("./templates/chat_message.hbs")
+      .then(function(response) {
+        return response.text();
+      })
+      .then(function(template) {
+        // compila la plantilla
+        const compiledTemplate = Handlebars.compile(template);
+        // renderiza la plantilla con la información especificada
+        const html = compiledTemplate({
+          nombre: data.nombre,
+          mensaje: data.mensaje
+        });
+        // inserta el HTML resultante en el documento
+        const products_container = document.getElementById('chat_body');
+        products_container.innerHTML = products_container.innerHTML + html ;
+      });
+  }
+
+  function sendMessage() {
+    const data = {
+      nombre : sessionStorage.getItem('username'),
+      mensaje : document.getElementById('input_message').value,
+      timestamp: new Date()
+    }
+
+    // manda el evento a server
+    socket.emit('client:new-message', data)
+    document.getElementById('input_message').value = ''
+  }
+
+  socket.on('server:new-message', data => renderMessage(data).then(() => {
+    const chatDiv = document.getElementById('chat_body');
+    chatDiv.scrollTop = chatDiv.scrollHeight
+  }))
+
+</script>
+</body>
+</html>
